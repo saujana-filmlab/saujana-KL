@@ -486,9 +486,13 @@ function Registry({customers, orders, onAdd, onUpdate, onDelete, onNewOrderFor})
 
   async function del(id) {
     if (!confirm("Remove this customer?")) return;
-    await onDelete(id);
-    if (selected?.id===id) setSelected(null);
-    showToast("Removed");
+    try {
+      await onDelete(id);
+      if (selected?.id===id) setSelected(null);
+      showToast("Removed ✓");
+    } catch(e) {
+      showToast("Could not remove from Sheets");
+    }
   }
 
   return (
@@ -703,9 +707,14 @@ function App() {
 
   async function handleDelete(id) {
     setSyncing(true);
-    await apiCall("deleteCustomer",id);
-    setCustomers(p=>p.filter(c=>c.id!==id));
-    setSyncing(false);
+    try {
+      const result = await apiCall("deleteCustomer",{id, customerId:id});
+      if (result?.error) throw new Error(result.error);
+      setCustomers(p=>p.filter(c=>c.id!==id));
+      await load();
+    } finally {
+      setSyncing(false);
+    }
   }
 
   function handleOrderSaved(saved, custId) {
