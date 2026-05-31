@@ -11,7 +11,7 @@
 
   <!-- WhatsApp Link Preview -->
   <meta property="og:title" content="Saujana - Darkroom Dispatch" />
-  <meta property="og:description" content="Film Lab Bali · Operations Dashboard" />
+  <meta property="og:description" content="Film Lab KL · Operations Dashboard" />
   <meta property="og:image" content="https://saujana-filmlab.github.io/saujana-scans/dd-icon.png" />
   <meta property="og:url" content="https://saujana-filmlab.github.io/saujana-scans/saujana-dispatch.html" />
   <meta property="og:type" content="website" />
@@ -117,7 +117,7 @@ function LockScreen({onUnlock}) {
       <div style={{textAlign:"center", marginBottom: 40}}>
         <img src="saujana-dd.png" alt="Darkroom Dispatch Logo" style={{height: 180, maxWidth:"100%", objectFit:"contain", marginBottom: 16}}/>
         <div style={{fontSize:10,letterSpacing:"0.4em",textTransform:"uppercase",
-                     color:"var(--muted)"}}>Film Lab Bali · Operations</div>
+                     color:"var(--muted)"}}>Film Lab KL · Operations</div>
       </div>
 
       <div style={{width:"100%",maxWidth:320,background:"var(--card)",
@@ -226,7 +226,7 @@ function Dispatch({customers, onOrderSaved, prefill, clearPrefill}) {
   async function copyRich() {
     if (!result) return;
     const r = result;
-    const html = `<p>Hi <strong>${r.custName}</strong>! Your scans are ready 🎞️</p><br><p><strong>Order Number: ${r.orderNumber}</strong></p><br><p><a href="${r.url}"><strong>Get your scans here →</strong></a></p><br><p>Link active for <strong>7 days</strong>. Quote order number when collecting negatives.</p><br><p>Questions? <a href="https://wa.me/6282251318377"><strong>WhatsApp: +62 822 5131 8377</strong></a></p><br><p>Kind regards,<br><strong>Saujana Film Lab</strong><br>Bali, Indonesia</p>`;
+    const html = `<p>Hi <strong>${r.custName}</strong>! Your scans are ready 🎞️</p><br><p><strong>Order Number: ${r.orderNumber}</strong></p><br><p><a href="${r.url}"><strong>Get your scans here →</strong></a></p><br><p>Link active for <strong>7 days</strong>. Quote order number when collecting negatives.</p><br><p>Questions? <a href="https://wa.me/601159348334"><strong>WhatsApp: +60 1159 348 334</strong></a></p><br><p>Kind regards,<br><strong>Saujana Film Lab</strong><br>Kuala Lumpur, Malaysia</p>`;
     await navigator.clipboard.write([new ClipboardItem({"text/html":new Blob([html],{type:"text/html"})})]);
     showToast("Rich email copied — paste into Gmail!");
   }
@@ -234,14 +234,14 @@ function Dispatch({customers, onOrderSaved, prefill, clearPrefill}) {
   function openGmail() {
     if (!result) return;
     const r = result;
-    const sub = encodeURIComponent(`[${r.orderNumber}] Your scans are ready - Saujana Film Lab Bali`);
-    const body = encodeURIComponent(`Hi ${r.custName}! Your scans are ready 🎞️\n\nOrder: ${r.orderNumber}\n\nClick the link below to access your personalised delivery page:\n${r.url}\n\nLink active for 7 days. Quote order number when collecting negatives.\n\nQuestions? WhatsApp us at +62 822 5131 8377\n\nKind regards,\nSaujana Film Lab\nBali, Indonesia`);
+    const sub = encodeURIComponent(`[${r.orderNumber}] Your scans are ready - Saujana Film Lab`);
+    const body = encodeURIComponent(`Hi ${r.custName}! Your scans are ready 🎞️\n\nOrder: ${r.orderNumber}\n\nClick the link below to access your personalised delivery page:\n${r.url}\n\nLink active for 7 days. Quote order number when collecting negatives.\n\nQuestions? WhatsApp us at +60 1159 348 334\n\nKind regards,\nSaujana Film Lab\nKuala Lumpur, Malaysia`);
     window.open(`https://mail.google.com/mail/?view=cm&fs=1&to=${custEmail?encodeURIComponent(custEmail):""}&su=${sub}&body=${body}`,"_blank");
   }
 
 function copyWhatsApp() {
     if (!result || !shortUrl) return;
-    const text = `Hi ${result.custName}! Your scans are ready 🎞️\n\nOrder Number: ${result.orderNumber}\n\nGet your scans here:\n${shortUrl}\n\nLink active for 7 days. Quote order number when collecting negatives.\n\nSaujana Film Lab Bali`;
+    const text = `Hi ${result.custName}! Your scans are ready 🎞️\n\nOrder Number: ${result.orderNumber}\n\nGet your scans here:\n${shortUrl}\n\nLink active for 7 days. Quote order number when collecting negatives.\n\nSaujana Film Lab`;
     navigator.clipboard.writeText(text).then(()=>{
       setCopied(c=>({...c, wa:true}));
       showToast("WhatsApp text copied!");
