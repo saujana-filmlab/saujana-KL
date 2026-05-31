@@ -204,7 +204,7 @@ function Dispatch({customers, onOrderSaved, prefill, clearPrefill}) {
   async function shorten() {
     if (!result) return;
     setShortening(true);
-    const alias = "saujanabali-"+result.orderNumber.replace(/[^a-zA-Z0-9-]/g,"-");
+    const alias = "saujanafilmlab-"+result.orderNumber.replace(/[^a-zA-Z0-9-]/g,"-");
     try {
       const r = await fetch(`https://tinyurl.com/api-create.php?url=${encodeURIComponent(result.url)}&alias=${encodeURIComponent(alias)}`);
       const txt = await r.text();
@@ -418,9 +418,9 @@ function copyWhatsApp() {
                 Click below to access your personalised delivery page:<br/><br/>
                 <span style={{color:"var(--blue-l)",textDecoration:"underline"}}>Get your scans here →</span><br/><br/>
                 Link active for <strong style={{color:"var(--white)"}}>7 days</strong>. Quote order number when collecting negatives.<br/><br/>
-                Questions? WhatsApp us at <strong style={{color:"var(--white)"}}>+62 822 5131 8377</strong><br/><br/>
+                Questions? WhatsApp us at <strong style={{color:"var(--white)"}}>+60 1159 348 334</strong><br/><br/>
                 Kind regards,<br/>
-                <strong style={{color:"var(--white)"}}>Saujana Film Lab</strong><br/>Bali, Indonesia
+                <strong style={{color:"var(--white)"}}>Saujana Film Lab</strong><br/>Kuala Lumpur, Malaysia
               </div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:8}}>
                 <button onClick={copyRich} style={{...css.btn(),padding:11}}>Copy for Gmail</button>
