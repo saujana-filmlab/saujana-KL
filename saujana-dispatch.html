@@ -72,6 +72,8 @@ const fmtDT   = ts => {
          d.toLocaleTimeString("en-GB",{hour:"2-digit",minute:"2-digit"});
 };
 
+const deliveryUrl = o => `${BASE_URL}?order=${encodeURIComponent(o.orderNumber)}&name=${encodeURIComponent(o.customerName||"Customer")}&film=${encodeURIComponent(o.film||"")}&link=${encodeURIComponent(o.driveLink||"")}${o.notes?"&notes="+encodeURIComponent(o.notes):""}`;
+
 // ── Styles ────────────────────────────────────────────────
 const css = {
   btn: (variant="primary") => ({
@@ -136,7 +138,7 @@ function LockScreen({onUnlock}) {
 }
 
 // ── Dispatch Tab ──────────────────────────────────────────
-function Dispatch({customers, onOrderSaved, prefill, clearPrefill}) {
+function Dispatch({customers, orders=[], onOrderSaved, prefill, clearPrefill}) {
   const [orderNo, setOrderNo]     = useState("");
   const [custInput, setCustInput] = useState("");
   const [selCust, setSelCust]     = useState(null);
@@ -151,6 +153,7 @@ function Dispatch({customers, onOrderSaved, prefill, clearPrefill}) {
   const [showDrop, setShowDrop]   = useState(false);
   const [copied, setCopied]       = useState({});
   const [toast, setToast]         = useState("");
+  const [orderSearch, setOrderSearch] = useState("");
   const dropRef = useRef();
 
   useEffect(() => {
@@ -190,13 +193,13 @@ function Dispatch({customers, onOrderSaved, prefill, clearPrefill}) {
     if (!orderNo.trim()||!film||!driveLink.trim()) return;
     setGenerating(true);
     const name = selCust ? selCust.name : (custInput.trim()||"Customer");
-    const url = `${BASE_URL}?order=${encodeURIComponent(orderNo)}&name=${encodeURIComponent(name)}&film=${encodeURIComponent(film)}&link=${encodeURIComponent(driveLink)}${notes?"&notes="+encodeURIComponent(notes):""}`;
+    const order = {orderNumber:orderNo.trim().toUpperCase(), customerName:name, film, notes:notes.trim(), driveLink:driveLink.trim()};
+    const url = deliveryUrl(order);
     const saved = await apiCall("addOrder",{
-      orderNumber:orderNo.trim().toUpperCase(), customerId:selCust?.id||"",
-      customerName:name, film, notes:notes.trim(), driveLink:driveLink.trim(),
+      ...order, customerId:selCust?.id||"",
     });
-    onOrderSaved(saved, selCust?.id);
-    setResult({url, custName:name, orderNumber:orderNo.trim().toUpperCase(), film});
+    onOrderSaved({...saved, ...order}, selCust?.id);
+    setResult({url, custName:name, orderNumber:order.orderNumber, film});
     setShortUrl(null); setCopied({}); setGenerating(false);
     showToast("Order saved to Sheets ✓");
   }
@@ -250,6 +253,27 @@ function copyWhatsApp() {
   }
 
   const canGen = orderNo.trim() && rolls.some(Boolean) && driveLink.trim();
+  const pastOrders = orders
+    .filter(o=>o.driveLink)
+    .filter(o=>{
+      const q = orderSearch.toLowerCase();
+      return !q ||
+        String(o.orderNumber||"").toLowerCase().includes(q) ||
+        String(o.customerName||"").toLowerCase().includes(q) ||
+        String(o.film||"").toLowerCase().includes(q) ||
+        String(o.notes||"").toLowerCase().includes(q);
+    })
+    .sort((a,b)=>(b.createdAt||0)-(a.createdAt||0))
+    .slice(0,12);
+
+  function loadPastOrder(o) {
+    const customer = customers.find(c=>c.id===o.customerId);
+    setCustEmail(customer?.email || "");
+    setResult({url:deliveryUrl(o), custName:o.customerName||"Customer", orderNumber:o.orderNumber, film:o.film});
+    setShortUrl(null);
+    setCopied({});
+    showToast("Past order loaded");
+  }
 
   return (
     <div style={{display:"flex",gap:16,height:"calc(100vh - 130px)"}}>
@@ -364,8 +388,9 @@ function copyWhatsApp() {
 
       {/* Result */}
       <div style={{flex:1,minWidth:0,overflowY:"auto"}}>
+        <div style={{display:"flex",flexDirection:"column",gap:12}}>
         {result ? (
-          <div style={{display:"flex",flexDirection:"column",gap:12}}>
+          <>
             <div style={css.card}>
               <span style={css.secLabel}>Delivery Page Link</span>
               <div onClick={()=>copyText(result.url,"url")} style={{background:"var(--dark)",
@@ -427,9 +452,9 @@ function copyWhatsApp() {
                 <button onClick={openGmail} style={{...css.btn("ghost"),padding:11}}>Open in Gmail ↗</button>
               </div>
             </div>
-          </div>
+          </>
         ) : (
-          <div style={{...css.card,height:"100%",display:"flex",alignItems:"center",
+          <div style={{...css.card,minHeight:220,display:"flex",alignItems:"center",
                        justifyContent:"center",flexDirection:"column",gap:10}}>
             <div style={{fontFamily:"'Cormorant Garamond',serif",fontSize:32,fontStyle:"italic",color:"var(--dim)"}}>
               Ready to dispatch
@@ -439,6 +464,46 @@ function copyWhatsApp() {
             </div>
           </div>
         )}
+
+          <div style={css.card}>
+            <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",gap:12,marginBottom:14}}>
+              <span style={{...css.secLabel,marginBottom:0}}>Retrieve Past Order</span>
+              <span style={{fontSize:10,color:"var(--dim)"}}>{pastOrders.length} shown</span>
+            </div>
+            <input value={orderSearch} onChange={e=>setOrderSearch(e.target.value)}
+              placeholder="Search order, customer, film, notes..." style={{marginBottom:12}}/>
+            <div style={{display:"flex",flexDirection:"column",gap:8,maxHeight:300,overflowY:"auto"}}>
+              {pastOrders.length===0 ? (
+                <div style={{textAlign:"center",padding:24,color:"var(--dim)",fontSize:12}}>
+                  No saved scan links found
+                </div>
+              ) : pastOrders.map(o=>(
+                <div key={o.id} style={{display:"flex",alignItems:"center",gap:12,padding:"11px 12px",
+                  background:"var(--dark)",border:"1px solid var(--border)",borderRadius:2}}>
+                  <div style={{flex:1,minWidth:0}}>
+                    <div style={{display:"flex",gap:8,alignItems:"center",flexWrap:"wrap"}}>
+                      <span style={{fontFamily:"'Cormorant Garamond',serif",fontSize:14,
+                        color:"var(--white)",letterSpacing:"0.05em"}}>{o.orderNumber}</span>
+                      <span style={{fontSize:11,color:"var(--muted)"}}>{o.customerName}</span>
+                    </div>
+                    <div style={{fontSize:10,color:"var(--dim)",marginTop:3}}>
+                      {fmtDT(o.createdAt)} · {o.film}
+                    </div>
+                  </div>
+                  <button onClick={()=>loadPastOrder(o)}
+                    style={{...css.btn(),padding:"7px 10px",fontSize:9,whiteSpace:"nowrap"}}>
+                    Load
+                  </button>
+                  <a href={deliveryUrl(o)} target="_blank" rel="noopener"
+                    style={{...css.btn("ghost"),padding:"7px 10px",fontSize:9,whiteSpace:"nowrap",
+                      color:"var(--blue-l)",textDecoration:"none"}}>
+                    Open ↗
+                  </a>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
@@ -651,6 +716,11 @@ function Registry({customers, orders, onAdd, onUpdate, onDelete, onNewOrderFor})
                     <div style={{fontSize:10,color:"var(--dim)",marginTop:3}}>{fmtDT(o.createdAt)}</div>
                   </div>
                   {o.notes&&<div style={{fontSize:10,color:"var(--muted)",maxWidth:160,textAlign:"right"}}>{o.notes}</div>}
+                  {o.driveLink&&<a href={deliveryUrl(o)} target="_blank" rel="noopener"
+                    style={{...css.btn("ghost"),padding:"6px 10px",fontSize:9,whiteSpace:"nowrap",
+                      color:"var(--blue-l)",textDecoration:"none"}}>
+                    Open scans ↗
+                  </a>}
                 </div>
               ))}
             </div>
@@ -774,7 +844,7 @@ function App() {
             Connecting to Google Sheets…
           </div>
         ) : tab==="dispatch" ? (
-          <Dispatch customers={customers} onOrderSaved={handleOrderSaved}
+          <Dispatch customers={customers} orders={orders} onOrderSaved={handleOrderSaved}
             prefill={prefill} clearPrefill={()=>setPrefill(null)}/>
         ) : (
           <Registry customers={customers} orders={orders}
